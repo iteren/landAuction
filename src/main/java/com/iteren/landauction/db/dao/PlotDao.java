@@ -10,4 +10,6 @@ public interface PlotDao {
 
 	Long save(Plot plot);
 
+	List<Plot> getPlotsInRange(Double latMin, Double latMax, Double lngMin, Double lngMax);
+
 }

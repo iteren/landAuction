@@ -2,6 +2,7 @@ package com.iteren.landauction.db.dao;
 
 import java.util.List;
 
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -33,6 +34,21 @@ public class PlotDaoImpl implements PlotDao {
 		tx.commit();
 		session.close();
 		return plot.getPlotId();
+	}
+	
+	@Override
+	public List<Plot> getPlotsInRange(Double latMin, Double latMax, Double lngMin, Double lngMax) {
+		Session session = this.sessionFactory.openSession();
+		Query query = session
+				.createQuery("from Plot where lat > :latMin and lat < :latMax and lng > :lngMin and lng < :lngMax");
+		query.setParameter("latMin", latMin);
+		query.setParameter("latMax", latMax);
+		query.setParameter("lngMin", lngMin);
+		query.setParameter("lngMax", lngMax);
+		@SuppressWarnings("unchecked")
+		List<Plot> plots = query.list();
+		session.close();
+		return plots;
 	}
 
 }

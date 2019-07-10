@@ -12,11 +12,17 @@
 	width: 70%;
 }
 
-#container {
+#hContainer {
 	height: 100%;
 	width: 100%;
 	display: flex;
 	flex-direction: row;
+	align-items: flex-start;
+}
+
+#vContainer {
+	display: flex;
+	flex-direction: column;
 	align-items: flex-start;
 }
 /* Optional: Makes the sample page fill the window. */
@@ -28,58 +34,55 @@ html, body {
 </style>
 </head>
 <body>
-	<div id="container">
+	<div id="hContainer">
 		<div id="map"></div>
-		<div id="inputs">
-			<input id="inptLat"> <input id="inptLon"> <input id="addLocBtn" type="button" value="Add Location">
-		</div>
-		<div id="inputs2">
-			<input id="cadNumInput"> <input id="addPlotBtn" type="button" value="Add Plot">
+		<div id="vContainer">
+			<div id="hContainer">
+				<input id="inptLat"> <input id="inptLon">
+			</div>
+			<div style="background-color: red; width: 100%; height: 10px;"></div>
+
+			<input id="title" style="width: 100%;" value="Land">
+			<textarea id="description" style="width: 100%;" placeholder="Description of the ad"></textarea>
+			<input id="price" style="width: 100%;" value="1000"> <input id="ownerName" style="width: 100%;" value="Ihor">
+			<input id="ownerPhone" type="tel" style="width: 100%;" value="+380630000000"> <input id="ownerEmail"
+				type="email" style="width: 100%;" value="alool@gmail.com"> <input id="plotCadNum" style="width: 100%;"
+				value="4623610100:02:001:0264"> <input id="addPlotBtn" type="button" value="Add Plot" style="width: 100%;">
 		</div>
 	</div>
 	<script>
 		var map, infoWindow;
 		var markers = [];
-		document.getElementById("addLocBtn").onclick = submitLocation;
 		document.getElementById("addPlotBtn").onclick = addPlot;
 
-		function submitLocation() {
-			var inptLat = document.getElementById('inptLat')
-			var inptLon = document.getElementById('inptLon')
+		function addPlot() {
+			var title = document.getElementById('title');
+			var description = document.getElementById('description');
+			var price = document.getElementById('price');
+			var ownerName = document.getElementById('ownerName');
+			var ownerPhone = document.getElementById('ownerPhone');
+			var ownerEmail = document.getElementById('ownerEmail');
+			var plotCadNum = document.getElementById('plotCadNum');
 			$.ajax({
 				type : "POST",
-				url : window.location.pathname + 'rest/addLocation',
+				url : window.location.pathname + 'rest/announcement/add',
 				data : JSON.stringify({
-					lat : inptLat.value,
-					lng : inptLon.value
+					title : title.value,
+					description : description.placeholder,
+					price : price.value,
+					owner : {
+						name : ownerName.value,
+						phone : ownerPhone.value,
+						email : ownerEmail.value
+					},
+					plots : [ {
+						cadNum : plotCadNum.value
+					} ]
 				}),
-				contentType : "application/json; charset=utf-8",
-				dataType : "json"
-			});
-		}
-
-		function addPlot() {
-			var cadNumInput = document.getElementById('cadNumInput')
-			$.ajax({
-				type : "GET",
-				url : window.location.pathname + 'rest/addPlot',
-				data : {
-					cadNum : cadNumInput.value
-				},
 				contentType : "application/json; charset=utf-8",
 				dataType : "json",
 				success : function(data) {
-					console.log(data.lat);
-					console.log(data.lng);
-					var pos = {
-						lat : data.lat,
-						lng : data.lng
-					};
-					var marker = new google.maps.Marker({
-						position : pos,
-						map : map
-					});
-					markers.push(marker);
+					addMapMarker(data);
 				}
 			});
 		}
@@ -110,7 +113,6 @@ html, body {
 						inptLon.value = e.latLng.lng()
 					});
 					map.addListener('idle', searchLocations);
-					//map.addListener('dragend', searchLocations);
 
 				}, function() {
 					handleLocationError(true, infoWindow, map.getCenter());
@@ -136,7 +138,7 @@ html, body {
 			//});
 			$.ajax({
 				type : "POST",
-				url : window.location.pathname + 'rest/getLocations',
+				url : window.location.pathname + 'rest/announcement/list',
 				contentType : "application/json; charset=utf-8",
 				dataType : "json",
 				data : JSON.stringify({
@@ -147,23 +149,28 @@ html, body {
 				}),
 				success : function(data) {
 					for (var i = 0; i < data.length; i++) {
-						var obj = data[i];
-						console.log(obj.id);
-						console.log(obj.lat);
-						console.log(obj.lng);
-						var pos = {
-							lat : obj.lat,
-							lng : obj.lng
-						};
-						var marker = new google.maps.Marker({
-							position : pos,
-							map : map
-						//title : 'Price:23 000$'
-						});
-						markers.push(marker);
+						addMapMarker(data[i]);
 					}
 				}
 			});
+		}
+
+		function addMapMarker(announcement) {
+			console.log(announcement.price);
+			for (var j = 0; j < announcement.plots.length; j++) {
+				var plot = announcement.plots[j];
+				var pos = {
+					lat : plot.lat,
+					lng : plot.lng
+				};
+				console.log(announcement.price);
+				var marker = new google.maps.Marker({
+					position : pos,
+					map : map,
+					title : announcement.price.toString(10)
+				});
+				markers.push(marker);
+			}
 		}
 
 		function setMapOnAll(map) {

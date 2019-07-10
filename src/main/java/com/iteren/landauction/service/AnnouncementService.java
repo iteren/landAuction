@@ -11,6 +11,7 @@ import com.iteren.landauction.db.dao.PlotDao;
 import com.iteren.landauction.model.anouncement.Announcement;
 import com.iteren.landauction.model.anouncement.Plot;
 import com.iteren.landauction.model.landgovmap.PlotInfo;
+import com.iteren.landauction.model.map.MapCorners;
 import com.iteren.landauction.model.map.MapLocation;
 
 @Service
@@ -27,18 +28,18 @@ public class AnnouncementService {
 	public List<Announcement> getAllAnnouncements() {
 		return announcementDao.getAnouncemets();
 	}
-	
+
 	public Long addAnnouncement(Announcement announcement) {
 		announcement.getPlots().forEach(plotDao::save);
 		personDao.save(announcement.getOwner());
 		return announcementDao.save(announcement);
 	}
-	
+
 	public Announcement populatePlotsInfo(Announcement announcement) {
 		announcement.getPlots().stream().forEach(this::populatePlotInfo);
 		return announcement;
 	}
-	
+
 	public Plot populatePlotInfo(Plot plot) {
 		PlotInfo plotInfo = landGovService.getInfoForPlot(plot.getCadNum());
 		plot.setOwnershipcode(plotInfo.getOwnershipcode());
@@ -49,5 +50,11 @@ public class AnnouncementService {
 		plot.setLat(loc.getLat());
 		plot.setLng(loc.getLng());
 		return plot;
+	}
+
+	public List<Announcement> getAnnouncementsInLocation(MapCorners corners) {
+		List<Plot> plots = plotDao.getPlotsInRange(corners.getSeCorner().getLat(), corners.getNwCorner().getLat(),
+				corners.getNwCorner().getLng(), corners.getSeCorner().getLng());
+		return announcementDao.getAnouncemetsFor(plots);
 	}
 }

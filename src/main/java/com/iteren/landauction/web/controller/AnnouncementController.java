@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.iteren.landauction.model.anouncement.Announcement;
+import com.iteren.landauction.model.map.MapCorners;
 import com.iteren.landauction.service.AnnouncementService;
 
 @RestController
@@ -18,13 +19,19 @@ public class AnnouncementController {
 	private AnnouncementService announcementService;
 	
 	@RequestMapping(method=RequestMethod.POST, path="/add", consumes={"application/json"}, produces={"application/json"})
-	public Long addAnnouncement(@RequestBody Announcement announcement) {
+	public Announcement addAnnouncement(@RequestBody Announcement announcement) {
 		announcement = announcementService.populatePlotsInfo(announcement);
-		return announcementService.addAnnouncement(announcement);
+		announcementService.addAnnouncement(announcement);
+		return announcement;
 	}
 	
 	@RequestMapping(method=RequestMethod.GET, path="/list", consumes={"application/json"}, produces={"application/json"})
 	public List<Announcement> getAnnouncements() {
 		return announcementService.getAllAnnouncements();
+	}
+	
+	@RequestMapping(method=RequestMethod.POST, path="/list", consumes={"application/json"}, produces={"application/json"})
+	public List<Announcement> getLocations(@RequestBody MapCorners corners) {
+		return announcementService.getAnnouncementsInLocation(corners);
 	}
 }
