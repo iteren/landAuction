@@ -9,7 +9,7 @@ import org.hibernate.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.iteren.landauction.model.Location;
+import com.iteren.landauction.model.map.MapLocation;
 
 @Component
 public class LocationDaoImpl implements LocationDao {
@@ -18,16 +18,16 @@ public class LocationDaoImpl implements LocationDao {
 	private SessionFactory sessionFactory;
 
 	@Override
-	public List<Location> getLocations() {
+	public List<MapLocation> getLocations() {
 		Session session = this.sessionFactory.openSession();
 		@SuppressWarnings("unchecked")
-		List<Location> locations = session.createQuery("from Location").list();
+		List<MapLocation> locations = session.createQuery("from Location").list();
 		session.close();
 		return locations;
 	}
 
 	@Override
-	public List<Location> getLocationsInRange(Double latMin, Double latMax, Double lngMin, Double lngMax) {
+	public List<MapLocation> getLocationsInRange(Double latMin, Double latMax, Double lngMin, Double lngMax) {
 		Session session = this.sessionFactory.openSession();
 		Query query = session
 				.createQuery("from Location where lat > :latMin and lat < :latMax and lng > :lngMin and lng < :lngMax");
@@ -36,13 +36,13 @@ public class LocationDaoImpl implements LocationDao {
 		query.setParameter("lngMin", lngMin);
 		query.setParameter("lngMax", lngMax);
 		@SuppressWarnings("unchecked")
-		List<Location> locations = query.list();
+		List<MapLocation> locations = query.list();
 		session.close();
 		return locations;
 	}
 
 	@Override
-	public void save(Location location) {
+	public void save(MapLocation location) {
 		Session session = this.sessionFactory.openSession();
 		Transaction tx = session.beginTransaction();
 		session.persist(location);

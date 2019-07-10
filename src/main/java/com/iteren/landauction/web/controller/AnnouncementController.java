@@ -19,6 +19,7 @@ public class AnnouncementController {
 	
 	@RequestMapping(method=RequestMethod.POST, path="/add", consumes={"application/json"}, produces={"application/json"})
 	public Long addAnnouncement(@RequestBody Announcement announcement) {
+		announcement = announcementService.populatePlotsInfo(announcement);
 		return announcementService.addAnnouncement(announcement);
 	}
 	

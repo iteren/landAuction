@@ -1,4 +1,4 @@
-package com.iteren.landauction.model;
+package com.iteren.landauction.model.landgovmap;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import org.springframework.util.CollectionUtils;
 import lombok.Data;
 
 @Data
-public class ResponseLandGovMap {
+public class LandGovMapCoordinates {
 	private boolean status;
 	private List<LandGovPoint> data;
 	private int isArchTable;

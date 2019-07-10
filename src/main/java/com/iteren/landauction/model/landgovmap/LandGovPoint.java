@@ -1,4 +1,4 @@
-package com.iteren.landauction.model;
+package com.iteren.landauction.model.landgovmap;
 
 import lombok.Data;
 

@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.iteren.landauction.db.dao.LocationDao;
-import com.iteren.landauction.model.Location;
-import com.iteren.landauction.model.MapCorners;
+import com.iteren.landauction.model.map.MapLocation;
+import com.iteren.landauction.model.map.MapCorners;
 
 @Service("locationService")
 public class LocationService {
@@ -19,16 +19,16 @@ public class LocationService {
 	@Autowired
 	private LocationDao locationDao;
 
-	public List<Location> getAllLocations() {
+	public List<MapLocation> getAllLocations() {
 		return locationDao.getLocations();
 	}
 
-	public List<Location> getLocationInRectangle(MapCorners corners) {
+	public List<MapLocation> getLocationInRectangle(MapCorners corners) {
 		return locationDao.getLocationsInRange(corners.getSeCorner().getLat(), corners.getNwCorner().getLat(),
 				corners.getNwCorner().getLng(), corners.getSeCorner().getLng());
 	}
 
-	public void addLocation(Location location) {
+	public void addLocation(MapLocation location) {
 		locationDao.save(location);
 	}
 }

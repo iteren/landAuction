@@ -1,9 +1,9 @@
-package com.iteren.landauction.model;
+package com.iteren.landauction.model.map;
 
 import lombok.Data;
 
 @Data
-public class GeoLocationPoint {
+public class Map3dPoint {
 	private Double x;
 	private Double y;
 	private Double z;

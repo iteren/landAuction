@@ -2,14 +2,14 @@ package com.iteren.landauction.db.dao;
 
 import java.util.List;
 
-import com.iteren.landauction.model.Location;
+import com.iteren.landauction.model.map.MapLocation;
 
 public interface LocationDao {
 
-	List<Location> getLocations();
+	List<MapLocation> getLocations();
 	
-	List<Location> getLocationsInRange(Double latMin, Double latMax, Double lngMin, Double lngMax);
+	List<MapLocation> getLocationsInRange(Double latMin, Double latMax, Double lngMin, Double lngMax);
 	
-	void save(Location location);
+	void save(MapLocation location);
 
 }
