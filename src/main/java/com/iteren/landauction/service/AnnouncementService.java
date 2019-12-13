@@ -5,10 +5,12 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.iteren.landauction.connector.olx.OlxAnnouncement;
+import com.iteren.landauction.connector.olx.OlxConnector;
 import com.iteren.landauction.db.dao.AnnouncementDao;
-import com.iteren.landauction.db.dao.PersonDao;
 import com.iteren.landauction.db.dao.PlotDao;
 import com.iteren.landauction.model.anouncement.Announcement;
+import com.iteren.landauction.model.anouncement.Person;
 import com.iteren.landauction.model.anouncement.Plot;
 import com.iteren.landauction.model.landgovmap.PlotInfo;
 import com.iteren.landauction.model.map.MapCorners;
@@ -21,22 +23,20 @@ public class AnnouncementService {
 	@Autowired
 	private PlotDao plotDao;
 	@Autowired
-	private PersonDao personDao;
-	@Autowired
 	private LandGovService landGovService;
+	@Autowired
+	private OlxConnector olxConnector;
 
 	public List<Announcement> getAllAnnouncements() {
 		return announcementDao.getAnouncemets();
 	}
 
 	public Long addAnnouncement(Announcement announcement) {
-		announcement.getPlots().forEach(plotDao::save);
-		personDao.save(announcement.getOwner());
 		return announcementDao.save(announcement);
 	}
 
 	public Announcement populatePlotsInfo(Announcement announcement) {
-		announcement.getPlots().stream().forEach(this::populatePlotInfo);
+		populatePlotInfo(announcement.getPlot());
 		return announcement;
 	}
 
@@ -56,5 +56,23 @@ public class AnnouncementService {
 		List<Plot> plots = plotDao.getPlotsInRange(corners.getSeCorner().getLat(), corners.getNwCorner().getLat(),
 				corners.getNwCorner().getLng(), corners.getSeCorner().getLng());
 		return announcementDao.getAnouncemetsFor(plots);
+	}
+
+	public Announcement parseAdd(String link) {
+		OlxAnnouncement olxAnnouncement = olxConnector.getAnnouncement(link);
+		if (olxAnnouncement == null) {
+			return null;
+		}
+		Announcement announcement = new Announcement();
+		announcement.setDescription(olxAnnouncement.getDescription());
+		announcement.setPrice(olxAnnouncement.getPrice());
+		announcement.setSourceLink(link);
+		announcement.setPriceCurrency(olxAnnouncement.getCurrency());
+		announcement.setImageUrl(olxAnnouncement.getImageUrl());
+		Plot plot = new Plot();
+		plot.setCadNum(olxAnnouncement.getCadNum());
+		announcement.setPlot(plot);
+		announcement.setOwner(new Person());
+		return announcement;
 	}
 }

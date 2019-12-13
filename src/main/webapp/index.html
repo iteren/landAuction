@@ -4,12 +4,18 @@
 <title>Simple Map</title>
 <meta name="viewport" content="initial-scale=1.0">
 <meta charset="utf-8">
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+	integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+</head>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+	integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <style>
 /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
 #map {
 	height: 100%;
-	width: 70%;
+	width: 100%;
 }
 
 #hContainer {
@@ -31,168 +37,70 @@ html, body {
 	margin: 0;
 	padding: 0;
 }
+
+#loadingDiv {
+	position: absolute;
+	display: block;
+	opacity: 0.5;
+	background-color: #dce7fa;
+	z-index: 99;
+	text-align: center;
+	left: 50%;
+	top: 50%;
+}
+
+.disabledbutton {
+	pointer-events: none;
+	opacity: 0.4;
+}
 </style>
 </head>
-<body>
-	<div id="hContainer">
-		<div id="map"></div>
-		<div id="vContainer">
-			<div id="hContainer">
-				<input id="inptLat"> <input id="inptLon">
-			</div>
-			<div style="background-color: red; width: 100%; height: 10px;"></div>
+<link rel="import" id="addForm" href="forms/add_plot_form.html">
+<link rel="import" id="searchForm" href="forms/parse_add_form.html">
+<link rel="import" id="plotInfoForm" href="forms/plot_info_form.html">
 
-			<input id="title" style="width: 100%;" value="Land">
-			<textarea id="description" style="width: 100%;" placeholder="Description of the ad"></textarea>
-			<input id="price" style="width: 100%;" value="1000"> <input id="ownerName" style="width: 100%;" value="Ihor">
-			<input id="ownerPhone" type="tel" style="width: 100%;" value="+380630000000"> <input id="ownerEmail"
-				type="email" style="width: 100%;" value="alool@gmail.com"> <input id="plotCadNum" style="width: 100%;"
-				value="4623610100:02:001:0264"> <input id="addPlotBtn" type="button" value="Add Plot" style="width: 100%;">
+<body>
+	<div class="spinner-border text-danger" role="status" id="loadingDiv">
+		<span class="sr-only">Loading...</span>
+	</div>
+	<div id="alert-modal" class="modal fade">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 id="alert-modal-title" class="modal-title"></h4>
+				</div>
+				<div id="alert-modal-body" class="modal-body"></div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+				</div>
+			</div>
 		</div>
 	</div>
-	<script>
-		var map, infoWindow;
-		var markers = [];
-		document.getElementById("addPlotBtn").onclick = addPlot;
+	<div id="hContainer">
+		<div id="map"></div>
+		<div id="vContainer" style="height: 100%; width: 40%; background-color: #dce7fa; overflow-Y: auto"">
+			<ul class="nav nav-tabs" id="myTab" role="tablist">
+				<li class="nav-item"><a class="nav-link active" id="home-tab" data-toggle="tab" href="#addForm" role="tab"
+					aria-controls="home" aria-selected="true" onclick="switchAddPlotTab('addForm')">Додати вручну</a></li>
+				<li class="nav-item"><a class="nav-link" id="profile-tab" data-toggle="tab" href="#searchForm" role="tab"
+					aria-controls="profile" aria-selected="false" onclick="switchAddPlotTab('searchForm')">Додати по посиланню</a></li>
+			</ul>
+			<div id="addPlotMenu" style="width: 100%; background-color: #dce7fa"></div>
+			<div id="plotInfo" style="width: 100%; background-color: #d7d4fa"></div>
 
-		function addPlot() {
-			var title = document.getElementById('title');
-			var description = document.getElementById('description');
-			var price = document.getElementById('price');
-			var ownerName = document.getElementById('ownerName');
-			var ownerPhone = document.getElementById('ownerPhone');
-			var ownerEmail = document.getElementById('ownerEmail');
-			var plotCadNum = document.getElementById('plotCadNum');
-			$.ajax({
-				type : "POST",
-				url : window.location.pathname + 'rest/announcement/add',
-				data : JSON.stringify({
-					title : title.value,
-					description : description.placeholder,
-					price : price.value,
-					owner : {
-						name : ownerName.value,
-						phone : ownerPhone.value,
-						email : ownerEmail.value
-					},
-					plots : [ {
-						cadNum : plotCadNum.value
-					} ]
-				}),
-				contentType : "application/json; charset=utf-8",
-				dataType : "json",
-				success : function(data) {
-					addMapMarker(data);
-				}
-			});
-		}
-
-		function initMap() {
-			map = new google.maps.Map(document.getElementById('map'), {
-				center : {
-					lat : 49.811,
-					lng : 23.992
-				},
-				zoom : 15
-			});
-
-			// Try HTML5 geolocation.
-			if (navigator.geolocation) {
-				navigator.geolocation.getCurrentPosition(function(position) {
-					var pos = {
-						lat : position.coords.latitude,
-						lng : position.coords.longitude
-					};
-
-					map.setCenter(pos);
-
-					map.addListener('click', function(e) {
-						var inptLat = document.getElementById('inptLat')
-						var inptLon = document.getElementById('inptLon')
-						inptLat.value = e.latLng.lat()
-						inptLon.value = e.latLng.lng()
-					});
-					map.addListener('idle', searchLocations);
-
-				}, function() {
-					handleLocationError(true, infoWindow, map.getCenter());
-				});
-			} else {
-				// Browser doesn't support Geolocation
-				handleLocationError(false, infoWindow, map.getCenter());
-			}
-		}
-
-		function searchLocations(e) {
-			clearMarkers();
-			var bounds = map.getBounds();
-			var NECorner = bounds.getNorthEast();
-			var SWCorner = bounds.getSouthWest();
-			var NWCorner = new google.maps.LatLng(NECorner.lat(), SWCorner.lng());
-			var SECorner = new google.maps.LatLng(SWCorner.lat(), NECorner.lng());
-			//var polygon = new google.maps.Polygon({
-			//map : map,
-			//paths : [ NWCorner, NECorner, SECorner, SWCorner ],
-			//fillColor : 'red',
-			//fillOpacity : 0.7
-			//});
-			$.ajax({
-				type : "POST",
-				url : window.location.pathname + 'rest/announcement/list',
-				contentType : "application/json; charset=utf-8",
-				dataType : "json",
-				data : JSON.stringify({
-					neCorner : NECorner,
-					swCorner : SWCorner,
-					nwCorner : NWCorner,
-					seCorner : SECorner
-				}),
-				success : function(data) {
-					for (var i = 0; i < data.length; i++) {
-						addMapMarker(data[i]);
-					}
-				}
-			});
-		}
-
-		function addMapMarker(announcement) {
-			console.log(announcement.price);
-			for (var j = 0; j < announcement.plots.length; j++) {
-				var plot = announcement.plots[j];
-				var pos = {
-					lat : plot.lat,
-					lng : plot.lng
-				};
-				console.log(announcement.price);
-				var marker = new google.maps.Marker({
-					position : pos,
-					map : map,
-					title : announcement.price.toString(10)
-				});
-				markers.push(marker);
-			}
-		}
-
-		function setMapOnAll(map) {
-			for (var i = 0; i < markers.length; i++) {
-				markers[i].setMap(map);
-			}
-		}
-
-		// Removes the markers from the map, but keeps them in the array.
-		function clearMarkers() {
-			setMapOnAll(null);
-		}
-
-		function handleLocationError(browserHasGeolocation, infoWindow, pos) {
-			infoWindow.setPosition(pos);
-			infoWindow.setContent(browserHasGeolocation ? 'Error: The Geolocation service failed.'
-					: 'Error: Your browser doesn\'t support geolocation.');
-			infoWindow.open(map);
-		}
-	</script>
+		</div>
+	</div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+		integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+	<script src="js/mapOperations.js"></script>
+	<script src="js/uiControl.js"></script>
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCc75wY-xCuCV5O3XTr0dRkzghpDuU72C4&callback=initMap"
 		async defer></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script>
+		var link = document.getElementById('addForm');
+      	var importedContent = link.import;
+		document.getElementById("addPlotMenu").innerHTML = importedContent.documentElement.innerHTML;
+	</script>
 </body>
 </html>

@@ -21,6 +21,8 @@ public class DataBaseConfig {
 		ds.setURL("jdbc:mysql://localhost:3306/landauction");
 		ds.setUser("root");
 		ds.setPassword("root");
+		ds.setCharacterEncoding("utf-8");
+		ds.setUseUnicode(true);
 		return ds;
 	}
 
@@ -38,7 +40,7 @@ public class DataBaseConfig {
 			private static final long serialVersionUID = 1L;
 
 			{
-				setProperty("hibernate.hbm2ddl.auto", "create");
+				setProperty("hibernate.hbm2ddl.auto", "update");
 				setProperty("hibernate.dialect", "org.hibernate.dialect.MySQL5Dialect");
 				setProperty("hibernate.globally_quoted_identifiers", "true");
 			}
