@@ -35,4 +35,13 @@ public class PersonDaoImpl implements PersonDao {
 		return person.getPersonId();
 	}
 
+	@Override
+	public void delete(Person person) {
+		Session session = this.sessionFactory.openSession();
+		Transaction tx = session.beginTransaction();
+		session.delete(person);
+		tx.commit();
+		session.close();
+	}
+
 }

@@ -63,6 +63,26 @@ html, body {
 	<div class="spinner-border text-danger" role="status" id="loadingDiv">
 		<span class="sr-only">Loading...</span>
 	</div>
+	<div id="cadNum-modal" class="modal fade">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 id="cadNum-modal-title" class="modal-title">Введіть кадастровий номер</h4>
+				</div>
+				<div id="cadNum-modal-body" class="modal-body">
+					<div class="form-group">
+						<label for="recipient-name" class="col-form-label">Кадастровий номер</label> 
+						<input type="text" class="form-control" id="modalCadNum">
+					</div>
+				</div>
+
+				<div class="modal-footer">
+					<button type="button" class="btn btn-outline-primary" id="modalAddPlotBtn" onclick="addPlotFromStorage()">Запамятати</button>
+					<button type="button" class="btn btn-outline-primary" data-dismiss="modal">Закрити</button>
+				</div>
+			</div>
+		</div>
+	</div>
 	<div id="alert-modal" class="modal fade">
 		<div class="modal-dialog">
 			<div class="modal-content">
@@ -71,24 +91,25 @@ html, body {
 				</div>
 				<div id="alert-modal-body" class="modal-body"></div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-outline-primary" data-dismiss="modal">Закрити</button>
 				</div>
 			</div>
 		</div>
 	</div>
 	<div id="hContainer">
-		<div id="map"></div>
 		<div id="vContainer" style="height: 100%; width: 40%; background-color: #dce7fa; overflow-Y: auto"">
-			<ul class="nav nav-tabs" id="myTab" role="tablist">
-				<li class="nav-item"><a class="nav-link active" id="home-tab" data-toggle="tab" href="#addForm" role="tab"
+			<ul class="nav nav-pills" id="myTab" role="tablist">
+				<li class="nav-item"><a class="nav-link active" id="searchForm-tab" data-toggle="tab" href="#searchForm"
+					role="tab" aria-controls="profile" aria-selected="false" onclick="switchAddPlotTab('searchForm')">Додати по
+						посиланню</a></li>
+				<li class="nav-item"><a class="nav-link disabled" id="addForm-tab" data-toggle="tab" href="#addForm" role="tab"
 					aria-controls="home" aria-selected="true" onclick="switchAddPlotTab('addForm')">Додати вручну</a></li>
-				<li class="nav-item"><a class="nav-link" id="profile-tab" data-toggle="tab" href="#searchForm" role="tab"
-					aria-controls="profile" aria-selected="false" onclick="switchAddPlotTab('searchForm')">Додати по посиланню</a></li>
+				<li class="nav-item"><a class="nav-link" id="plotInfo-tab" data-toggle="tab" href="#plotInfo" role="tab"
+					aria-controls="home" aria-selected="true" onclick="switchAddPlotTab('plotInfoForm')">Інформація</a></li>	
 			</ul>
 			<div id="addPlotMenu" style="width: 100%; background-color: #dce7fa"></div>
-			<div id="plotInfo" style="width: 100%; background-color: #d7d4fa"></div>
-
 		</div>
+		<div id="map"></div>
 	</div>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
@@ -98,7 +119,7 @@ html, body {
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCc75wY-xCuCV5O3XTr0dRkzghpDuU72C4&callback=initMap"
 		async defer></script>
 	<script>
-		var link = document.getElementById('addForm');
+		var link = document.getElementById('searchForm');
       	var importedContent = link.import;
 		document.getElementById("addPlotMenu").innerHTML = importedContent.documentElement.innerHTML;
 	</script>

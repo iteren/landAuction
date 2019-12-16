@@ -8,6 +8,38 @@ $(document)
     $("#hContainer").removeClass("disabledbutton");
   });
 
+function reloadPlot() {
+	var pJson = document.getElementById('pJson');
+	$loading.show();
+    $("#hContainer").addClass("disabledbutton");
+	$.ajax({
+		type : "POST",
+		url : window.location.pathname + 'rest/announcement/reload',
+		data : pJson.innerHTML,
+		contentType : "application/json; charset=utf-8",
+		dataType : "json",
+		success : function(resp) {
+			searchLocations(resp);
+		}
+	});
+}
+
+function deletePlot() {
+	var pJson = document.getElementById('pJson');
+	$loading.show();
+    $("#hContainer").addClass("disabledbutton");
+	$.ajax({
+		type : "POST",
+		url : window.location.pathname + 'rest/announcement/delete',
+		data : pJson.innerHTML,
+		contentType : "application/json; charset=utf-8",
+		dataType : "json",
+		success : function(resp) {
+			searchLocations(resp);
+		}
+	});
+}
+
 function parsePlotAdd() {
 	var sourceLink = document.getElementById('sourceLink');
 	$loading.show();
@@ -20,9 +52,10 @@ function parsePlotAdd() {
 		}),
 		contentType : "application/json; charset=utf-8",
 		dataType : "json",
-		success : function(data) {
-			addMapMarker(data);
+		success : function(resp) {
+			addProcessPlotResp(resp);
 		}
+			
 	});
 }
 
@@ -56,10 +89,29 @@ function addPlot() {
 		}),
 		contentType : "application/json; charset=utf-8",
 		dataType : "json",
-		success : function(data) {
-			addMapMarker(data);
+		success : function(resp) {
+			addProcessPlotResp(resp);
 		}
 	});
+}
+
+function addPlotFromStorage() {
+	var plotCadNum = document.getElementById('modalCadNum').value;
+	var accouncement = JSON.parse(localStorage.getItem('cadNum.dialog.announcement'));
+	accouncement.plot.cadNum = plotCadNum;
+	$loading.show();
+    $("#hContainer").addClass("disabledbutton");
+	$.ajax({
+		type : "POST",
+		url : window.location.pathname + 'rest/announcement/add',
+		data : JSON.stringify(accouncement),
+		contentType : "application/json; charset=utf-8",
+		dataType : "json",
+		success : function(resp) {
+			addProcessPlotResp(resp);
+		}
+	});
+	$('#cadNum-modal').modal('hide');
 }
 
 function initMap() {
@@ -117,23 +169,39 @@ function searchLocations(e) {
 			seCorner : SECorner
 		}),
 		success : function(result) {
-			if(result.data) {
+			if(result.success == true) {
 				for (var i = 0; i < result.data.length; i++) {
 					addMapMarker(result.data[i]);
 				}
-			} 
-			if(result.error) {
+			} else {
 				showErrorMessage(result.error.message);
 			}
 		}
 	});
 }
 
-function addMapMarker(announcement) {
-	if(announcement.error) {
-		showErrorMessage(announcement.error.message);
+function addProcessPlotResp(resp) {
+	if(resp.success == false && resp.error.action == 'cadNum.dialog.show') {
+		localStorage.setItem('cadNum.dialog.announcement', JSON.stringify(resp.data));
+		$('#cadNum-modal').modal('show');
+		return;
+	} 
+	
+	if(resp.success == false) {
+		showErrorMessage(resp.error.message);
 		return;
 	}
+	
+	addMapMarker(resp.data);
+	var plot = resp.data.plot;
+	var pos = {
+		lat : plot.lat,
+		lng : plot.lng
+	};
+	map.setCenter(pos);
+}
+
+function addMapMarker(announcement) {
 	var plot = announcement.plot;
 	var pos = {
 		lat : plot.lat,
@@ -142,20 +210,25 @@ function addMapMarker(announcement) {
 	var marker = new google.maps.Marker({
 		position : pos,
 		map : map,
-		title : String(announcement.price).toString(10),
+		title : String('Ціна: ' + announcement.price + ' ' + announcement.priceCurrency + ' Розмір: ' + plot.size).toString(10),
 		plot : plot
 	});
 	marker.addListener('click', function () {
+		switchAddPlotTab('plotInfoForm');
+		$("#plotInfo-tab").addClass("active");
+		$("#addForm-tab").removeClass("active");
+		$("#searchForm-tab").removeClass("active");
 		var link = document.getElementById('plotInfoForm');
       	var importedContent = link.import;
-		document.getElementById("plotInfo").innerHTML = importedContent.documentElement.innerHTML;
 		
 		var description = document.getElementById('pDescription');
 		var price = document.getElementById('pPrice');
 		var plotCadNum = document.getElementById('pPlotCadNum');
 		var sourceLink = document.getElementById('pSourceLink');
 		var image = document.getElementById('pImage');
+		var pJson = document.getElementById('pJson');
 		
+		pJson.innerHTML  = JSON.stringify(announcement);
 		price.innerHTML  = announcement.price + ' ' + announcement.priceCurrency;
 		description.innerHTML  = announcement.description;
 		sourceLink.innerHTML = announcement.sourceLink;
@@ -166,7 +239,12 @@ function addMapMarker(announcement) {
 	markers.push(marker);
 }
 
-
+function showErrorMessage(body) {
+	  // Display error message to the user in a modal
+	  $('#alert-modal-title').html('Error during api call');
+	  $('#alert-modal-body').html(body);
+	  $('#alert-modal').modal('show');
+}
 
 function setMapOnAll(map) {
 	for (var i = 0; i < markers.length; i++) {
@@ -186,9 +264,16 @@ function handleLocationError(browserHasGeolocation, infoWindow, pos) {
 	infoWindow.open(map);
 }
 
-function showErrorMessage(body) {
-	  // Display error message to the user in a modal
-	  $('#alert-modal-title').html('Error during api call');
-	  $('#alert-modal-body').html(body);
-	  $('#alert-modal').modal('show');
+function switchAddPlotTab(elementId) {
+	var link = document.getElementById(elementId);
+  	var importedContent = link.import;
+	document.getElementById("addPlotMenu").innerHTML = importedContent.documentElement.innerHTML;
+}
+
+function resizeImage(img) {
+	var childwidth = $("#pImage").width();
+	var parentwidth = $("#pImage").parent().width();
+	var percent = parentwidth / childwidth;
+	img.width = parentwidth;
+	img.height = img.height * percent;
 }

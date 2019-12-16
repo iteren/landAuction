@@ -10,4 +10,6 @@ public interface PersonDao {
 
 	Long save(Person person);
 
+	void delete(Person owner);
+
 }

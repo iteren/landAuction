@@ -1,6 +1,5 @@
 package com.iteren.landauction.web.controller;
 
-import java.io.PrintWriter;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -11,11 +10,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.ModelAndView;
 
 import com.iteren.landauction.model.GenericRsponse;
 import com.iteren.landauction.model.ParseAddForm;
 import com.iteren.landauction.model.anouncement.Announcement;
+import com.iteren.landauction.model.anouncement.Plot;
 import com.iteren.landauction.model.map.MapCorners;
 import com.iteren.landauction.service.AnnouncementService;
 
@@ -29,7 +28,13 @@ public class AnnouncementController {
 			"application/json" })
 	public GenericRsponse<Announcement> addAnnouncement(@RequestBody Announcement announcement) {
 		Announcement parsedAnnouncement = announcementService.parseAdd(announcement.getSourceLink());
-		parsedAnnouncement = announcementService.populatePlotsInfo(announcement);
+		String cadNum = announcement.getPlot().getCadNum() != null ? announcement.getPlot().getCadNum()
+				: parsedAnnouncement.getPlot().getCadNum();
+		if (cadNum == null) {
+			return GenericRsponse.failureOf(parsedAnnouncement, "cadNum.dialog.show", "Please specify cadNum.");
+		}
+		Plot plot = announcementService.getPlotInfo(cadNum);
+		parsedAnnouncement.setPlot(plot);
 		announcementService.addAnnouncement(parsedAnnouncement);
 		return GenericRsponse.of(parsedAnnouncement);
 	}
@@ -48,9 +53,28 @@ public class AnnouncementController {
 
 	@RequestMapping(method = RequestMethod.POST, path = "/parseAdd", consumes = { "application/json" }, produces = {
 			"application/json" })
-	public GenericRsponse<Announcement> parseAdd(@RequestBody ParseAddForm form) {
+	public GenericRsponse<Announcement> parse(@RequestBody ParseAddForm form) {
 		Announcement announcement = announcementService.parseAdd(form.getSourceLink());
+		if (announcement.getPlot().getCadNum() == null) {
+			return GenericRsponse.failureOf(announcement, "cadNum.dialog.show", "Please specify cadNum.");
+		}
 		return addAnnouncement(announcement);
+	}
+
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(method = RequestMethod.POST, path = "/delete", consumes = { "application/json" }, produces = {
+			"application/json" })
+	public GenericRsponse delete(@RequestBody Announcement announcement) {
+		announcementService.delete(announcement);
+		return GenericRsponse.of(null);
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@RequestMapping(method = RequestMethod.POST, path = "/reload", consumes = { "application/json" }, produces = {
+			"application/json" })
+	public GenericRsponse reload(@RequestBody Announcement announcement) {
+		announcementService.delete(announcement);
+		return GenericRsponse.of(addAnnouncement(announcement));
 	}
 
 	@SuppressWarnings("rawtypes")

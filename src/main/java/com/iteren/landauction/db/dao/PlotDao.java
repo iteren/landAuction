@@ -12,4 +12,6 @@ public interface PlotDao {
 
 	List<Plot> getPlotsInRange(Double latMin, Double latMax, Double lngMin, Double lngMax);
 
+	void delete(Plot plot);
+
 }

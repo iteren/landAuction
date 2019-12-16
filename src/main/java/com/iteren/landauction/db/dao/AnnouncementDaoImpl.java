@@ -16,6 +16,7 @@ import org.springframework.util.CollectionUtils;
 
 import com.iteren.landauction.model.anouncement.Announcement;
 import com.iteren.landauction.model.anouncement.Description;
+import com.iteren.landauction.model.anouncement.Person;
 import com.iteren.landauction.model.anouncement.Plot;
 
 @Component
@@ -47,15 +48,16 @@ public class AnnouncementDaoImpl implements AnnouncementDao {
 		List<Description> descriptions = new ArrayList<>();
 		for (int i = 0; i < announcement.getDescription().length(); i += 254) {
 			Description d = new Description();
-			d.setDescription(announcement.getDescription().substring(i, Math.min(i + 254, announcement.getDescription().length())));
+			d.setDescription(announcement.getDescription().substring(i,
+					Math.min(i + 254, announcement.getDescription().length())));
 			descriptionDao.save(d);
 			descriptions.add(d);
 		}
 		announcement.setDescriptions(descriptions);
-		
+
 		plotDao.save(announcement.getPlot());
 		personDao.save(announcement.getOwner());
-		
+
 		Session session = this.sessionFactory.openSession();
 		Transaction tx = session.beginTransaction();
 		session.persist(announcement);
@@ -79,6 +81,25 @@ public class AnnouncementDaoImpl implements AnnouncementDao {
 				a.getDescriptions().stream().map(Description::getDescription).collect(Collectors.toList()))));
 		session.close();
 		return announcements;
+	}
+
+	@Override
+	public void delete(Announcement announcement) {
+		Plot plot = announcement.getPlot();
+		Person owner = announcement.getOwner();
+//		announcement.setPlot(null);
+//		announcement.setOwner(null);
+		Session session = this.sessionFactory.openSession();
+		Transaction tx = session.beginTransaction();
+		session.delete(announcement);
+		tx.commit();
+		session.close();
+		
+		plotDao.delete(plot);
+		personDao.delete(owner);
+		for (Description d : announcement.getDescriptions()) {
+			descriptionDao.delete(d);
+		}
 	}
 
 }

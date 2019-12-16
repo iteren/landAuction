@@ -35,20 +35,21 @@ public class AnnouncementService {
 		return announcementDao.save(announcement);
 	}
 
-	public Announcement populatePlotsInfo(Announcement announcement) {
-		populatePlotInfo(announcement.getPlot());
-		return announcement;
-	}
-
-	public Plot populatePlotInfo(Plot plot) {
-		PlotInfo plotInfo = landGovService.getInfoForPlot(plot.getCadNum());
+	public Plot getPlotInfo(String cadNum) {
+		if (cadNum == null) {
+			throw new IllegalArgumentException(
+					"Cannot get plot info, cadNum is empty. Please use additional input to add it.");
+		}
+		Plot plot = new Plot();
+		PlotInfo plotInfo = landGovService.getInfoForPlot(cadNum);
 		plot.setOwnershipcode(plotInfo.getOwnershipcode());
 		plot.setPurpose(plotInfo.getPurpose());
 		plot.setSize(plotInfo.getArea());
 		plot.setUse(plotInfo.getUse());
-		MapLocation loc = landGovService.getLocationForPlot(plot.getCadNum());
+		MapLocation loc = landGovService.getLocationForPlot(cadNum);
 		plot.setLat(loc.getLat());
 		plot.setLng(loc.getLng());
+		plot.setCadNum(cadNum);
 		return plot;
 	}
 
@@ -61,7 +62,8 @@ public class AnnouncementService {
 	public Announcement parseAdd(String link) {
 		OlxAnnouncement olxAnnouncement = olxConnector.getAnnouncement(link);
 		if (olxAnnouncement == null) {
-			return null;
+			throw new IllegalArgumentException(
+					"Cannot get announcement details using provided link.");
 		}
 		Announcement announcement = new Announcement();
 		announcement.setDescription(olxAnnouncement.getDescription());
@@ -75,4 +77,14 @@ public class AnnouncementService {
 		announcement.setOwner(new Person());
 		return announcement;
 	}
+
+	public void delete(Announcement announcement) {
+		announcementDao.delete(announcement);
+	}
+
+	public void reload(Announcement announcement) {
+		announcementDao.delete(announcement);
+		
+	}
+	
 }

@@ -49,8 +49,6 @@ public class OlxConnector {
 		if (mCad.find()) {
 			String cad = mCad.group(1).trim();
 			announcement.setCadNum(cad);
-		} else {
-			throw new IllegalArgumentException("Cannot get CadNum from Olx announcement. Please use additional input to add it.");
 		}
 
 		Matcher mImg = imgPattern.matcher(content);
@@ -70,11 +68,4 @@ public class OlxConnector {
 		return parse(body);
 	}
 
-	public static void main(String[] args) {
-		Matcher m = currencyPattern.matcher(
-				"ageView\":{\"ad_id\":\"608037739\",\"ad_photo\":\"13\",\"ad_price\":\"30000\",\"price_currency\":\"USD\",");
-		m.find();
-		String price = m.group(1);
-		System.out.println(price);
-	}
 }

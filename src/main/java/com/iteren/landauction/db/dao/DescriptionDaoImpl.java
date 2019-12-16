@@ -35,5 +35,14 @@ public class DescriptionDaoImpl implements DescriptionDao {
 		return description.getDescriptionId();
 	}
 
+	@Override
+	public void delete(Description description) {
+		Session session = this.sessionFactory.openSession();
+		Transaction tx = session.beginTransaction();
+		session.delete(description);
+		tx.commit();
+		session.close();
+	}
+
 
 }

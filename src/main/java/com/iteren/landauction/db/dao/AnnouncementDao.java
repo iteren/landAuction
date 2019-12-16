@@ -13,4 +13,6 @@ public interface AnnouncementDao {
 
 	List<Announcement> getAnouncemetsFor(List<Plot> plots);
 
+	void delete(Announcement announcement);
+
 }

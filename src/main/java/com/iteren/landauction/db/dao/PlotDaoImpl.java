@@ -51,4 +51,13 @@ public class PlotDaoImpl implements PlotDao {
 		return plots;
 	}
 
+	@Override
+	public void delete(Plot plot) {
+		Session session = this.sessionFactory.openSession();
+		Transaction tx = session.beginTransaction();
+		session.delete(plot);
+		tx.commit();
+		session.close();
+	}
+
 }

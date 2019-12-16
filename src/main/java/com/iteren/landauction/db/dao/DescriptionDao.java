@@ -10,4 +10,6 @@ public interface DescriptionDao {
 
 	Long save(Description description);
 
+	void delete(Description d);
+
 }
